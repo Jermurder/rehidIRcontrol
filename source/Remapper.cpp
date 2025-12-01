@@ -79,28 +79,28 @@ cont:
 static uint32_t keystrtokeyval(char *str) {
     uint32_t val = 0;
     static const key_s keys[] = {
-        { "A",      KEY_A},
-        { "B",      KEY_B},
-        { "SELECT", KEY_SELECT},
-        { "START", KEY_START},
-        { "RIGHT",  KEY_DRIGHT},
-        { "LEFT",   KEY_DLEFT},
-        { "UP",     KEY_DUP},
-        { "DOWN",   KEY_DDOWN},
-        { "R",      KEY_R},
-        { "L",      KEY_L},
-        { "X",      KEY_X},
-        { "Y",      KEY_Y},
-        { "ZL",     KEY_ZL},
-        { "ZR",     KEY_ZR},
-        { "CRIGHT", KEY_CPAD_RIGHT},
-        { "CLEFT",  KEY_CPAD_LEFT},
-        { "CDOWN",  KEY_CPAD_DOWN},
-        { "CUP",    KEY_CPAD_UP},
-        { "CSRIGHT", KEY_CSTICK_RIGHT},
-        { "CSLEFT",  KEY_CSTICK_LEFT},
-        { "CSDOWN",  KEY_CSTICK_DOWN},
-        { "CSUP",    KEY_CSTICK_UP}
+        {"A",      KEY_A},
+        {"B",      KEY_B},
+        {"SELECT", KEY_SELECT},
+        {"START",  KEY_START},
+        {"RIGHT",  KEY_DRIGHT},
+        {"LEFT",   KEY_DLEFT},
+        {"UP",     KEY_DUP},
+        {"DOWN",   KEY_DDOWN},
+        {"R",      KEY_R},
+        {"L",      KEY_L},
+        {"X",      KEY_X},
+        {"Y",      KEY_Y},
+        {"ZL",     KEY_ZL},
+        {"ZR",     KEY_ZR},
+        {"CRIGHT", KEY_CPAD_RIGHT},
+        {"CLEFT",  KEY_CPAD_LEFT},
+        {"CDOWN",  KEY_CPAD_DOWN},
+        {"CUP",    KEY_CPAD_UP},
+        {"CSRIGHT", KEY_CSTICK_RIGHT},
+        {"CSLEFT",  KEY_CSTICK_LEFT},
+        {"CSDOWN",  KEY_CSTICK_DOWN},
+        {"CSUP",    KEY_CSTICK_UP}
     };
     char *key;
     char *rest = nullptr;
@@ -167,7 +167,7 @@ void Remapper::GenerateFileLocation() {
 
 extern char data[0x100];
 
-uint32_t Remapper::Remap(uint32_t hidstate, uint32_t newpressedkeys) {
+uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *entry) {
     char buf[50];
     uint32_t newstate = hidstate;
 
@@ -217,10 +217,12 @@ uint32_t Remapper::Remap(uint32_t hidstate, uint32_t newpressedkeys) {
 
     }
 
+    newstate = CirclePadRemap(hidstate, newstate, entry);
+
     return newstate;
 }
 
-uint32_t Remapper::CirclePadRemap(uint32_t hidstate, CirclePadEntry *circlepad) {
+uint32_t Remapper::CirclePadRemap(uint32_t hidstate, uint32_t newstate, CirclePadEntry *circlepad) {
     /*
         Following cases seem to be the most popular:-
         Output=Input
@@ -231,7 +233,6 @@ uint32_t Remapper::CirclePadRemap(uint32_t hidstate, CirclePadEntry *circlepad) 
     CirclePadEntry newentry;
     newentry.x = circlepad->x;
     newentry.y = circlepad->y;
-    uint32_t newstate = hidstate;
 
     if (m_docpadtodpad) {
         if (hidstate & KEY_CPAD_UP) {
@@ -260,35 +261,35 @@ uint32_t Remapper::CirclePadRemap(uint32_t hidstate, CirclePadEntry *circlepad) 
 
     if (m_dodpadtocpad) {
         if (hidstate & KEY_DLEFT) {
-            if (m_docpadtodpad && ((hidstate & KEY_CPAD_LEFT) == 0))
-                newstate &= ~KEY_DLEFT;
-
+            //if (m_docpadtodpad && ((hidstate & KEY_CPAD_LEFT) == 0))
+            
+            newstate &= ~KEY_DLEFT;
             newstate |= KEY_CPAD_LEFT;
             newentry.x = -190;
             newentry.y = 0;
         }
 
         else if (hidstate & KEY_DRIGHT) {
-            if (m_docpadtodpad && ((hidstate & KEY_CPAD_RIGHT) == 0))
-                newstate &= ~KEY_DRIGHT;
-
+            //if (m_docpadtodpad && ((hidstate & KEY_CPAD_RIGHT) == 0))
+            
+            newstate &= ~KEY_DRIGHT;
             newstate |= KEY_CPAD_RIGHT;
             newentry.x = 190;
             newentry.y = 0;
         }
 
         if (hidstate & KEY_DDOWN) {
-            if (m_docpadtodpad && ((hidstate & KEY_CPAD_DOWN) == 0))
-                newstate &= ~KEY_DDOWN;
-
+            //if (m_docpadtodpad && ((hidstate & KEY_CPAD_DOWN) == 0))
+            
+            newstate &= ~KEY_DDOWN;
             newstate |= KEY_CPAD_DOWN;
             newentry.y = -190;
         }
 
         else if (hidstate & KEY_DUP) {
-            if (m_docpadtodpad && ((hidstate & KEY_CPAD_UP) == 0))
-                newstate &= ~KEY_DUP;
-
+            //if (m_docpadtodpad && ((hidstate & KEY_CPAD_UP) == 0))
+            
+            newstate &= ~KEY_DUP;
             newstate |= KEY_CPAD_UP;
             newentry.y = 190;
         }

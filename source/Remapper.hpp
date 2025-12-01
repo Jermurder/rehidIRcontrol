@@ -28,6 +28,8 @@ struct TurboKeyObject {
     uint8_t state;
     uint8_t framedelay;
     uint8_t frames;
+    uint8_t behaviour;
+    uint32_t holduntil;
 };
 
 struct key_s {
@@ -38,8 +40,8 @@ struct key_s {
 class Remapper {
 public:
     void GenerateFileLocation();
-    uint32_t Remap(uint32_t hidtstate, uint32_t newpressedkeys);
-    uint32_t CirclePadRemap(uint32_t hidstate, CirclePadEntry *circlepad);
+    uint32_t Remap(uint32_t hidtstate, CirclePadEntry *circlePad);
+    uint32_t CirclePadRemap(uint32_t hidstate, uint32_t newstate, CirclePadEntry *circlepad);
     Result ReadConfigFile();
     void ParseConfigFile();
     void Reset() {

@@ -57,8 +57,7 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
     }
 
     latest = latest | m_rawkeys | remapper->m_remaptouchkeys;
-    latest = remapper->Remap(latest, (latest ^ m_latestkeys) & m_latestkeys);
-    latest = remapper->CirclePadRemap(latest, circlepad);
+    latest = remapper->Remap(latest, circlepad);
     entry->pressedpadstate = (latest ^ m_latestkeys) & ~m_latestkeys;
     entry->releasedpadstate = (latest ^ m_latestkeys) & m_latestkeys;
     entry->currpadstate = latest;
