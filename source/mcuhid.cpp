@@ -12,8 +12,8 @@ void mcuHidExit() {
     svcCloseHandle(mcuHidHandle);
 }
 
-Result mcuHidEnableAccelerometer(u8 enable) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+Result mcuHidEnableAccelerometer(uint8_t enable) {
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0x10040;
     cmdbuf[1] = enable;
     Result ret = svcSendSyncRequest(mcuHidHandle);
@@ -25,7 +25,7 @@ Result mcuHidEnableAccelerometer(u8 enable) {
 }
 
 Result mcuHidReadAccelerometerValues(AccelerometerEntry *entry) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0x60000;
     Result ret = svcSendSyncRequest(mcuHidHandle);
 
@@ -36,8 +36,8 @@ Result mcuHidReadAccelerometerValues(AccelerometerEntry *entry) {
     return cmdbuf[1];
 }
 
-Result mcuHidGetSliderState(u8 *rawvalue) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+Result mcuHidGetSliderState(uint8_t *rawvalue) {
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0x70000;
     Result ret = svcSendSyncRequest(mcuHidHandle);
 
@@ -49,7 +49,7 @@ Result mcuHidGetSliderState(u8 *rawvalue) {
 }
 
 Result mcuHidGetAccelerometerEventHandle(Handle *handle) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0xC0000;
     Result ret = svcSendSyncRequest(mcuHidHandle);
 
@@ -61,7 +61,7 @@ Result mcuHidGetAccelerometerEventHandle(Handle *handle) {
 }
 
 Result mcuHidGetEventReason(uint32_t *reason) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0xD0000;
     Result ret = svcSendSyncRequest(mcuHidHandle);
 
@@ -73,7 +73,7 @@ Result mcuHidGetEventReason(uint32_t *reason) {
 }
 
 Result mcuHidGetSoundVolume(uint8_t *volume) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0xE0000;
     Result ret = svcSendSyncRequest(mcuHidHandle);
 
@@ -84,8 +84,8 @@ Result mcuHidGetSoundVolume(uint8_t *volume) {
     return cmdbuf[1];
 }
 
-Result mcuHidEnableAccelerometerInterrupt(u8 enable) {
-    u32 *cmdbuf = getThreadCommandBuffer();
+Result mcuHidEnableAccelerometerInterrupt(uint8_t enable) {
+    uint32_t *cmdbuf = getThreadCommandBuffer();
     cmdbuf[0] = 0xF0040;
     cmdbuf[1] = enable;
     Result ret = svcSendSyncRequest(mcuHidHandle);

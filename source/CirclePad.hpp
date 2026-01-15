@@ -1,8 +1,8 @@
 #pragma once
 #include <3ds.h>
 struct CirclePadEntry {
-    s16 x;
-    s16 y;
+    int16_t x;
+    int16_t y;
 };
 
 class CirclePad {
