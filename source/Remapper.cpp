@@ -165,7 +165,7 @@ void Remapper::GenerateFileLocation() {
     strcat(m_fileloc, "/rehid.json");
 }
 
-extern char data[0x100];
+char data[0x100];
 
 uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *entry) {
     char buf[50];
@@ -463,7 +463,7 @@ void Remapper::ParseConfigFile() {
 
         else if (strcasecmp(value->u.object.values[index].name, "overridecpadpro") == 0) {
             json_value *overridecppro = value->u.object.values[index].value; // OVERRIDE CPAD PRO
-            overridecpadpro = overridecppro->u.boolean & 0xFF;
+            m_overridecpadpro = overridecppro->u.boolean & 0xFF;
         }
 
         else if (strcasecmp(value->u.object.values[index].name, "homebutton") == 0) {

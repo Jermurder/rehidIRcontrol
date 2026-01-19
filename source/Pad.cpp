@@ -28,7 +28,6 @@ void Pad::SetTimer() {
         svcBreak(USERBREAK_ASSERT);
 }
 
-extern u8 irneeded;
 extern u32 debugpadkeys;
 extern CirclePadEntry debugpadstick;
 void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, Remapper *remapper) {
@@ -51,10 +50,8 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
 
     latest = m_circlepad.ConvertToHidButtons(circlepad, latest); // if need be this also sets the circlepad entry to 0
 
-    if (irneeded == 1) {
-        iruScanInput_();
-        m_rawkeys = iruKeysHeld_();
-    }
+    m_ir->ScanInput(remapper);
+    m_rawkeys = m_ir->GetInputs();
 
     latest = latest | m_rawkeys | remapper->m_remaptouchkeys;
     latest = remapper->Remap(latest, circlepad);

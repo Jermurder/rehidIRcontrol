@@ -5,6 +5,7 @@
 #include "Accelerometer.hpp"
 #include "Gyroscope.hpp"
 #include "DebugPad.hpp"
+#include "ir.hpp"
 
 extern "C"
 {
@@ -21,6 +22,7 @@ public:
     void InitializeAccelerometer();
     void InitializeGyroscope();
     void InitializeDebugPad();
+    void InitializeIR();
     void EnteringSleepMode();
     void ExitingSleepMode();
     void IsShellOpened(bool opened) {
@@ -46,6 +48,10 @@ public:
     DebugPad *GetDebugPad() {
         return &m_debugpad;
     };
+
+    IR *GetIR() {
+        return &m_ir;
+    }
 
     Handle *GetSharedMemHandle() {
         return &m_sharedmemhandle;
@@ -79,6 +85,7 @@ private:
     Accelerometer m_accel;
     Gyroscope m_gyro;
     DebugPad m_debugpad;
+    IR m_ir;
     bool m_shellisopen = true;
     MyThread m_samplingthread;
     bool m_samplingthreadstarted = false;

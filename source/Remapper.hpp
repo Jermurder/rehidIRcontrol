@@ -52,7 +52,7 @@ public:
         m_turboentries = 0;
         m_dodpadtocpad = 0;
         m_docpadtodpad = 0;
-        overridecpadpro = 0;
+        m_overridecpadpro = 0;
         m_homebuttonkeys = 0;
     }
 
@@ -80,6 +80,7 @@ public:
     uint32_t m_remaptouchkeys = 0;
     uint32_t m_homebuttonkeys = 0;
     uint8_t m_release = 0;
+    uint8_t m_overridecpadpro = 0;
 
 private:
     char *m_filedata;
