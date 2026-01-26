@@ -1,5 +1,6 @@
 #pragma once
 #include <3ds.h>
+#include <cstring>
 #include "exclusive_rw.hpp"
 
 struct CPPEntry {
@@ -19,9 +20,11 @@ public:
     }
 
     void Reset() {
-        m_tickcount = 0;
-        m_oldtickcount = 0;
-        m_updatedindex = 0;
+        m_tickcount = -1;
+        m_oldtickcount = -1;
+        m_updatedindex = -1;
+
+        //memset(&m_entries, 0, sizeof(m_entries) * sizeof(CPPEntry));
     }
 
     int32_t GetLatest(uint8_t index) {

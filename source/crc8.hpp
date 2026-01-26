@@ -38,7 +38,7 @@ const static uint8_t crc8_table[256] = {
 
 static inline uint8_t crc8(const void *buf, size_t len) {
     uint8_t res = 0;
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         res = crc8_table[res ^ ((uint8_t*)buf)[i]];
     }
     return res;
@@ -46,7 +46,7 @@ static inline uint8_t crc8(const void *buf, size_t len) {
 
 static inline uint8_t crc8_loop(const void *container_start, size_t container_size, const void *segment, size_t segment_size) {
     uint8_t res = 0;
-    for (int i = 0; i < segment_size; i++) {
+    for (size_t i = 0; i < segment_size; i++) {
         res = crc8_table[res ^ *(uint8_t*)segment++];
         if (segment == container_start + container_size)
             segment = container_start;

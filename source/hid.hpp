@@ -6,6 +6,8 @@
 #include "Gyroscope.hpp"
 #include "DebugPad.hpp"
 #include "ir.hpp"
+#include "CirclePadProO3DS.hpp"
+#include "CirclePadProN3DS.hpp"
 
 extern "C"
 {
@@ -15,6 +17,17 @@ extern "C"
 
 class Hid {
 public:
+
+    Hid() {
+        int64_t out = 0;
+        uint8_t isn3ds = svcGetSystemInfo(&out, 0x10001, 0) == 0;
+
+        if (isn3ds)
+            m_ir = &m_cppn3ds;
+        else
+            m_ir = &m_cppo3ds;
+    }
+
     void CreateAndMapMemoryBlock();
     void CreateRingsOnSharedmemoryBlock();
     void StartThreadsForSampling();
@@ -50,7 +63,7 @@ public:
     };
 
     IR *GetIR() {
-        return &m_ir;
+        return m_ir;
     }
 
     Handle *GetSharedMemHandle() {
@@ -85,7 +98,9 @@ private:
     Accelerometer m_accel;
     Gyroscope m_gyro;
     DebugPad m_debugpad;
-    IR m_ir;
+    IR *m_ir;
+    CPPO3DS m_cppo3ds;
+    CPPN3DS m_cppn3ds;
     bool m_shellisopen = true;
     MyThread m_samplingthread;
     bool m_samplingthreadstarted = false;

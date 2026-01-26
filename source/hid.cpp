@@ -56,7 +56,7 @@ void Hid::InitializePad() {
 
     m_pad.Initialize();
     m_pad.SetPadRing(m_padring);
-    m_pad.SetIR(&m_ir);
+    m_pad.SetIR(m_ir);
 
     m_touch.Initialize();
     m_touch.SetTouchRing(m_touchring);
@@ -91,12 +91,14 @@ static inline bool isServiceUsable(const char *name) {
 }
 
 void Hid::InitializeIR() {
+
+    /* if one service is usable, then so should the others */
     while (!isServiceUsable("ir:u"))
         svcSleepThread(1e+9); // Wait For service
 
     srvSetBlockingPolicy(true);
 
-    m_ir.Initialize();
+    m_ir->Initialize();
 
     srvSetBlockingPolicy(false);
 }
@@ -175,7 +177,7 @@ void Hid::StartThreadsForSampling() {
         m_gyroring->Reset();
         m_debugpadring->Reset();
         m_pad.SetTimer();
-        m_ir.SetTimer();
+        m_ir->SetTimer();
         m_debugpad.SetTimer();
         m_accel.EnableOrDisableInterrupt();
         m_gyro.EnableSampling();
@@ -191,7 +193,7 @@ void Hid::StartThreadsForSampling() {
 void Hid::EnteringSleepMode() {
     LightLock_Lock(&m_sleeplock); // now that main thread accquired the lock, sampling thread will get stuck
     svcClearEvent(dummyhandles[2]);
-    m_ir.SetEnteringSleep(1);
+    m_ir->SetEnteringSleep(1);
     PTMSYSM_NotifySleepPreparationComplete(0);
 }
 
@@ -205,8 +207,8 @@ void Hid::ExitingSleepMode() {
     m_debugpadring->Reset();
     m_pad.SetTimer();
     m_debugpad.SetTimer();
-    m_ir.SetEnteringSleep(0);
-    m_ir.SetTimer();
+    m_ir->SetEnteringSleep(0);
+    m_ir->SetTimer();
 
     PTMSYSM_NotifySleepPreparationComplete(0);
 }

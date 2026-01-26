@@ -4,6 +4,7 @@
 #include "mcuhid.hpp"
 #include "irrst.hpp"
 #include <cstdio>
+#include <cstring>
 extern "C" {
 #include "csvc.h"
 #include "services.h"
@@ -14,8 +15,6 @@ extern "C" {
 #define OS_INVALID_HEADER        MAKERESULT(RL_PERMANENT, RS_WRONGARG, RM_OS, 47)
 #define OS_INVALID_IPC_PARAMATER MAKERESULT(RL_PERMANENT, RS_WRONGARG, RM_OS, 48)
 
-extern u8 irneeded;
-extern int irrstRefCount;
 static Result HandleNotifications(Hid *hid, int *exit) {
     uint32_t notid = 0;
     Result ret = srvReceiveNotification(&notid);
@@ -74,6 +73,7 @@ extern "C"
     extern u32 __ctru_heap, __ctru_heap_size, __ctru_linear_heap, __ctru_linear_heap_size;
     extern char *fake_heap_start;
     extern char *fake_heap_end;
+    extern 
 
     // this is called before main
     void __system_allocateHeaps(void) {
@@ -87,6 +87,10 @@ extern "C"
         fake_heap_end = fake_heap_start + __ctru_heap_size;
     }
 
+    struct _reent* __wrap___syscall_getreent(void) {
+        return _impure_ptr;
+    }
+
     void __appInit() {
         srvSysInit();
         fsSysInit();
@@ -95,8 +99,8 @@ extern "C"
         if (ret != 0)
             *(u32*)ret = 0xFFAA;
 
-        //gdbHioDevInit();
-        //gdbHioDevRedirectStdStreams(false, true, false);
+        // gdbHioDevInit();
+        // gdbHioDevRedirectStdStreams(false, true, false);
         ptmSysmInit();
         //  logInit();
     }
