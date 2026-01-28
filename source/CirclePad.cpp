@@ -28,7 +28,7 @@ void CirclePad::GetConfigSettings() {
 
 void CirclePad::RawToCirclePadCoords(CirclePadEntry *result, CirclePadEntry raw) {
     result->x = raw.x;
-    s16 diffx = raw.x - m_latestdata.x;
+    int16_t diffx = raw.x - m_latestdata.x;
 
     if (diffx < 0)
         diffx = -diffx;
@@ -38,7 +38,7 @@ void CirclePad::RawToCirclePadCoords(CirclePadEntry *result, CirclePadEntry raw)
         result->x = m_latestdata.x;
 
     result->y = raw.y;
-    s16 diffy = (raw.y - m_latestdata.y);
+    int16_t diffy = (raw.y - m_latestdata.y);
 
     if (diffy < 0)
         diffy = -diffy;
@@ -48,30 +48,30 @@ void CirclePad::RawToCirclePadCoords(CirclePadEntry *result, CirclePadEntry raw)
     else if (diffy > 5)
         m_latestdata.y = raw.y;
 
-    s16 tmpx = ((result->x - m_center.x) * m_scalex);
-    s16 tmpx2;
+    int16_t tmpx = ((result->x - m_center.x) * m_scalex);
+    int16_t tmpx2;
 
     if (tmpx >= 0)
         tmpx2 = tmpx;
     else
         tmpx2 = -tmpx;
 
-    s16 finalx = ((tmpx2 & 7u) >= 3) + (tmpx2 >> 3);
+    int16_t finalx = ((tmpx2 & 7u) >= 3) + (tmpx2 >> 3);
 
     if (tmpx < 0)
         finalx = -finalx;
 
     result->x = finalx;
 
-    s16 tmpy = ((result->y - m_center.y) * m_scaley);
-    s16 tmpy2;
+    int16_t tmpy = ((result->y - m_center.y) * m_scaley);
+    int16_t tmpy2;
 
     if ((tmpy & 0x8000u) == 0)
         tmpy2 = tmpy;
     else
         tmpy2 = -tmpy;
 
-    s16 finaly = ((tmpy2 & 7u) >= 3) + (tmpy2 >> 3);
+    int16_t finaly = ((tmpy2 & 7u) >= 3) + (tmpy2 >> 3);
 
     if ((tmpy & 0x8000u) != 0)
         finaly = -finaly;
@@ -111,11 +111,12 @@ void CirclePad::AdjustValues(int16_t *adjustedx, int16_t *adjustedy, int rawx, i
     }
 }
 
-uint32_t CirclePad::ConvertToHidButtons(CirclePadEntry *circlepad, uint32_t buttons) {
+uint32_t CirclePad::ConvertToHidButtons(CirclePadEntry *circlepad, uint32_t buttons, const uint32_t *keys) {
     int32_t tanybyx = 0, tanxbyy = 0;
     CirclePadEntry adjusted;
     buttons = buttons & 0xFFFFFFF;
-    u32 left = KEY_CPAD_LEFT, right = KEY_CPAD_RIGHT, up = KEY_CPAD_UP, down = KEY_CPAD_DOWN;
+    uint32_t left = keys[0], right = keys[1], up = keys[2], down = keys[3];
+
     AdjustValues(&adjusted.x, &adjusted.y, circlepad->x, circlepad->y, 40, 145);
 
     if (adjusted.x)

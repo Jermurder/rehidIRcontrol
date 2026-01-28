@@ -6,7 +6,7 @@ static int iruserrefcount;
 
 Result irUserInit() {
     if (AtomicPostIncrement(&iruserrefcount))
-        return -1;
+        return 0;
 
     Result ret = 0;
 

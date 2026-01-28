@@ -138,27 +138,34 @@ public:
 
     virtual uint32_t GetInputs() override {
         return m_keysstate;
-    };
+    }
 
     virtual uint8_t IsEnteringSleep() override {
         return 0;
-    };
+    }
 
     virtual void SetEnteringSleep(uint8_t val) override {
         m_sleep = val;
         if (m_sleep) {
-            svcSignalEvent(*GetSleepEvent());
-            LightLock_Lock(GetSleepLock());
-            Disconnect();
+            svcSignalEvent(*GetExitEvent());
+            MyThread_Join(&m_thread, 1000 * MILLIS);
         } else {
+            svcClearEvent(*GetExitEvent());
             m_ring.Reset();
             m_latestkeys = 0;
             m_keysstate = 0;
-            LightLock_Unlock(GetSleepLock());
+
+            Result ret = IRUSER_Disconnect();
+            while (ret == 0xC8A10C01) {
+                svcSleepThread(1000 * MILLIS);
+                ret = IRUSER_Disconnect();
+            }
+
+            CreateThread(); 
         }
 
         return;
-    };
+    }
 
     void SetConnected(bool connected) {
         m_isconnected = connected;
@@ -197,6 +204,14 @@ public:
     Handle *GetSleepEvent() {
         return &m_events[3];
     }
+
+    bool GetSleep() {
+        return m_sleep;
+    }
+
+    Result CreateThread();
+
+    InfoLedPattern m_pattern {};
 
 private:
     Result SendReceive(const void *request, size_t requestsize, void *response, int responsesize, Handle *events, int64_t timeout, uint8_t expectedhead);

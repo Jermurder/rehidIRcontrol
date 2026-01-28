@@ -47,8 +47,7 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
     }
 
 #endif
-
-    latest = m_circlepad.ConvertToHidButtons(circlepad, latest); // if need be this also sets the circlepad entry to 0
+    latest = CirclePad::ConvertToHidButtons<CirclePadMode::CPAD>(circlepad, latest); // if need be this also sets the circlepad entry to 0
 
     m_ir->ScanInput(remapper);
     m_rawkeys = m_ir->GetInputs();

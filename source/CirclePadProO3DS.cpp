@@ -27,15 +27,13 @@ Result CPPO3DS::Initialize() {
         return ret;
     }
 
-    ret = irUserInit();
-    if (R_FAILED(ret)) 
-        goto cleanup1;
+    mcuHwcInit();
 
     ret = svcCreateMemoryBlock(&m_sharedmemhandle, (uint32_t)m_sharedmem, CPP_SHARED_MEM_SIZE, MEMPERM_READ, MEMPERM_READWRITE);
     if (R_FAILED(ret))
         goto cleanup2;
 
-    ret = svcCreateEvent(GetExitEvent(), RESET_ONESHOT);
+    ret = svcCreateEvent(GetExitEvent(), RESET_STICKY);
     if (R_FAILED(ret)) 
         goto cleanup3;
 
@@ -43,14 +41,12 @@ Result CPPO3DS::Initialize() {
     if (R_FAILED(ret)) 
         goto cleanup4;
 
-    ret = MyThread_Create(&m_thread, cppthread, this, irthreadstack, 0x1000, 0x20, -2);
+    ret = CreateThread();
 
     if (R_FAILED(ret)) {
         ret = -1;
         goto cleanup5;
     }
-
-    LightLock_Init(GetSleepLock());
 
     return 0;
 
@@ -66,6 +62,10 @@ Result CPPO3DS::Initialize() {
     free(m_sharedmem);
     m_sharedmem = nullptr;
     return ret;
+}
+
+Result CPPO3DS::CreateThread() {
+    return MyThread_Create(&m_thread, cppthread, this, irthreadstack, 0x1000, 0x28, 0);
 }
 
 void CPPO3DS::SetTimer() {
@@ -137,9 +137,6 @@ void CPPO3DS::Disconnect() {
 
     m_latestkeys = 0;
     m_packetid = 0;
-
-    // cPos.dx = 0;
-    // cPos.dy = 0;
 }
 
 int CPPO3DS::WaitForConnection() {
@@ -148,45 +145,51 @@ int CPPO3DS::WaitForConnection() {
     Handle *connectionevent = GetConnectionEvent();
     Handle *recvevent = GetRecvEvent();
 
-    Handle events[3] {};
+    Handle events[2] {};
     events[1] = *GetExitEvent();
-    events[2] = *GetSleepEvent();
 
     Result ret = 0;
 
-    while (true && !m_sleep) {
-        // If Lock succeeds, then we are not sleeping
-        LightLock_Lock(GetSleepLock());
-
+    while (true) {
         // I have no idea why this can't be out side the loop
         // Having it outside the loop doesn't work
-        IRUSER_InitializeIrnopShared(m_sharedmemhandle, \
+        ret = IRUSER_InitializeIrnopShared(m_sharedmemhandle, \
                 CPP_SHARED_MEM_SIZE, m_recvbufsize, CPP_RECV_PACKET_COUNT, \
                 m_sendbufsize, CPP_SEND_PACKET_COUNT, CPP_BAUD_RATE);
 
-        IRUSER_GetConnectionStatusEvent(connectionevent);
-        IRUSER_GetReceiveEvent(recvevent);
+        ret = IRUSER_GetConnectionStatusEvent(connectionevent);
+        ret = IRUSER_GetReceiveEvent(recvevent);
 
         events[0] = *connectionevent;
 
         // Try four times in quick succession, then wait a second.
         for (int i = 0; i < 4; i++) {
-            IRUSER_RequireConnection(1);
-            ret = svcWaitSynchronizationN(&handleidx, events, 3, false, 14 * MILLIS);
+            Result ret2 = IRUSER_RequireConnection(1);
+            if (ret2 == 0xC8A10C01) {
+                i--;
+                continue;
+            }
+
+            else if (ret2 != 0xC8A10C0B && ret2 != 0xC8A10C0C && ret2 != 0)
+                *(u32*)0xBAAD = ret2;
+
+            ret = svcWaitSynchronizationN(&handleidx, events, 2, false, 14 * MILLIS);
             if (R_DESCRIPTION(ret) != RD_TIMEOUT) {
                 if (handleidx == 0) {
-                    LightLock_Unlock(GetSleepLock());
+                    // Purple for connection event
+                    for (int i = 0; i < 32; i++) {
+                        m_pattern.redPattern[i] = 0xFF;
+                        m_pattern.greenPattern[i] = 0x10;
+                        m_pattern.bluePattern[i] = 0xFF;
+                    }
+
+                    MCUHWC_SetInfoLedPattern(&m_pattern);
                     return 0;
                 }
 
                 else if (handleidx == 1) {
-                    LightLock_Unlock(GetSleepLock());
+                    Disconnect();
                     return -1;
-                }
-
-                else if (handleidx == 2) {
-                    LightLock_Unlock(GetSleepLock());
-                    return -2;
                 }
 
                 break;
@@ -194,30 +197,12 @@ int CPPO3DS::WaitForConnection() {
 
             IRUSER_Disconnect();
         }
-
-        LightLock_Unlock(GetSleepLock());
         Disconnect();
 
-        events[0] = *GetSleepEvent();
-
-        LightLock_Lock(GetSleepLock());
-        ret = svcWaitSynchronizationN(&handleidx, events, 2, false, 1000 * MILLIS);
-        if (R_DESCRIPTION(ret) != RD_TIMEOUT) {
-            if (handleidx == 1) {
-                LightLock_Unlock(GetSleepLock());
-                return -1;
-            }
-
-            else if (handleidx == 0) {
-                LightLock_Unlock(GetSleepLock());
-                return -2;
-            }
-        }
-
-        LightLock_Unlock(GetSleepLock());
+        svcWaitSynchronization(*GetExitEvent(), 1000 * MILLIS);
     }
 
-    LightLock_Unlock(GetSleepLock());
+    Disconnect();
     return -1;
 }
 
@@ -227,14 +212,14 @@ Result CPPO3DS::SendReceive(const void *request, size_t requestsize, void *respo
         IRUSER_SendIrnop(request, requestsize);
 
         int32_t handleidx = 0;
-        subres = svcWaitSynchronizationN(&handleidx, events, 3, false, timeout);
-        if (R_DESCRIPTION(subres) == RD_TIMEOUT || handleidx == 1)  {
+        subres = svcWaitSynchronizationN(&handleidx, events, 2, false, timeout);
+        if (R_DESCRIPTION(subres) == RD_TIMEOUT)  {
             // Timeout.
             res = SAR_TIMEOUT;
             continue;
         }
 
-        if (handleidx == 2) {
+        if (handleidx == 1) {
             // Exit.
             res = SAR_EXIT;
             break;
@@ -270,7 +255,7 @@ int CPPO3DS::GetCalibrationData() {
     CPPCalibrationRequest request {2, 100, 0, 0x40};
     CPPCalibrationResponse response;
 
-    Handle events[3] {*GetRecvEvent(), *GetSleepEvent(), *GetExitEvent()};
+    Handle events[2] {*GetRecvEvent(), *GetExitEvent()};
 
     Result ret = SendReceive(&request, sizeof(request), &response, sizeof(response), events, 20 * MILLIS, 0x11);
     if (ret == SAR_EXIT) {
@@ -285,6 +270,14 @@ int CPPO3DS::GetCalibrationData() {
     for (int i = 0; i < 4; i++) {
         if (CheckCalibrationData(&m_calibrationdata, &response.candidates[i])) {
             found = true;
+             // Yellow on recieveing calibration data
+            for (int i = 0; i < 32; i++) {
+                m_pattern.redPattern[i] = 0xFF;
+                m_pattern.greenPattern[i] = 0xFF;
+                m_pattern.bluePattern[i] = 0x10;
+            }
+
+            MCUHWC_SetInfoLedPattern(&m_pattern);
             return 0;
         }
     }
@@ -318,8 +311,8 @@ int CPPO3DS::GetCalibrationData() {
 }
 
 int CPPO3DS::GetInputPackets() {
-    CPPInputRequest request {0x01, 8, 0x87};
-    Handle events[3] {*GetRecvEvent(), *GetSleepEvent(), *GetExitEvent()};
+    CPPInputRequest request {0x01, 0x20, 0x87};
+    Handle events[2] {*GetRecvEvent(), *GetExitEvent()};
 
     while (m_sharedmem->header.connectionstatus == IRUSER_ConnectionStatus::Connected && !m_sleep) {
         CPPInputResponse response {};
@@ -338,15 +331,16 @@ int CPPO3DS::GetInputPackets() {
             continue; // Ignore read errors.
         }
 
-        //cPos.dx = (s16)((float)(s16)(response.x - m_calibrationdata.xoff) * m_calibrationdata.xscale) / 8;
-        //cPos.dy = (s16)((float)(s16)(response.y - m_calibrationdata.yoff) * m_calibrationdata.yscale) / 8;
+        CirclePadEntry entry;
+        entry.x = (s16)((float)(s16)(response.x - m_calibrationdata.xoff) * m_calibrationdata.xscale) / 8;
+        entry.y = (s16)((float)(s16)(response.y - m_calibrationdata.yoff) * m_calibrationdata.yscale) / 8;
 
         uint32_t keys = 0;
         if (!response.rup) keys |= KEY_R;
         if (!response.zlup) keys |= KEY_ZL;
         if (!response.zrup) keys |= KEY_ZR;
-        m_latestkeys = keys;
 
+        m_latestkeys = CirclePad::ConvertToHidButtons<CirclePadMode::CSTICK>(&entry, keys);
         //batteryLevel = input_response.battery_level;
     }
 
@@ -356,27 +350,41 @@ int CPPO3DS::GetInputPackets() {
 static void cppthread(void *param) {
     CPPO3DS *cpp = (CPPO3DS *)param;
 
-    while (true) {
+    Result ret = irUserInit();
+    if (R_FAILED(ret))
+        *(u32*)0xF00D = 0xBABE;
 
+    ret = IRUSER_RequireConnection(1);
+    while (ret == 0xC8A10C01 && !cpp->GetSleep()) {
+        svcSleepThread(100 * MILLIS);
+        ret = IRUSER_RequireConnection(1);
+    }
+
+    cpp->m_pattern.delay = 0x10;
+    cpp->m_pattern.smoothing = 10;
+    cpp->m_pattern.loopDelay = 19;
+    cpp->m_pattern.blinkSpeed = 150;
+
+    // Orangish on thread creation
+    for (int i = 0; i < 32; i++) {
+        cpp->m_pattern.redPattern[i] = 0x00;
+        cpp->m_pattern.greenPattern[i] = 0xFF;
+        cpp->m_pattern.bluePattern[i] = 0x00;
+    }
+
+    MCUHWC_SetInfoLedPattern(&cpp->m_pattern);
+
+    while (true) {
         // Wait for CPP connection.
         int result = cpp->WaitForConnection();
         if (result == -1)
             break;
-        else if (result == -2) {
-            LightLock_Unlock(cpp->GetSleepLock());
-            continue;
-        }
-
-
-        // If Lock succeeds, then we are not sleeping
-        LightLock_Lock(cpp->GetSleepLock());
 
         // Retrieve calibration data.
         result = cpp->GetCalibrationData();
         if (result == -1)
             break;
         else if (result == -2) {
-            LightLock_Unlock(cpp->GetSleepLock());
             continue;
         }
 
@@ -388,21 +396,29 @@ static void cppthread(void *param) {
         if (result == -1)
             break;
         else if (result == -2) {
-            LightLock_Unlock(cpp->GetSleepLock());
             continue;
         }
-
-        LightLock_Unlock(cpp->GetSleepLock());
     }
 
-    cpp->Disconnect();
 
-    svcCloseHandle(*cpp->GetSharedMemHandle());
+    cpp->Disconnect();
     irUserFinalize();
 
-    CPPSharedMem *mem = cpp->GetSharedMem();
-    free(mem);
-    mem = nullptr;
+    // cpp->m_pattern.delay = 0;
+    // cpp->m_pattern.smoothing = 0;
+    // cpp->m_pattern.loopDelay = 0;
+    // cpp->m_pattern.blinkSpeed = 0;
+
+    // // White on exit
+    // for (int i = 0; i < 32; i++) {
+    //     cpp->m_pattern.redPattern[i] = 0x0;
+    //     cpp->m_pattern.greenPattern[i] = 0x0;
+    //     cpp->m_pattern.bluePattern[i] = 0x0;
+    // }
+
+    // MCUHWC_SetInfoLedPattern(&cpp->m_pattern);
+
+    MyThread_Exit();
 }
 
 int CPPO3DS::ReadPacket(void *out, size_t outlen) {
