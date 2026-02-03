@@ -136,8 +136,8 @@ public:
 
     void ScanInput(Remapper *remapper) override;
 
-    virtual uint32_t GetInputs() override {
-        return m_keysstate;
+    virtual CPPEntry GetInputs() override {
+        return m_cppstate;
     }
 
     virtual uint8_t IsEnteringSleep() override {
@@ -150,17 +150,11 @@ public:
             svcSignalEvent(*GetExitEvent());
             MyThread_Join(&m_thread, 1000 * MILLIS);
         } else {
-            svcClearEvent(*GetExitEvent());
             m_ring.Reset();
             m_latestkeys = 0;
-            m_keysstate = 0;
+            m_cppstate = {};
 
-            Result ret = IRUSER_Disconnect();
-            while (ret == 0xC8A10C01) {
-                svcSleepThread(1000 * MILLIS);
-                ret = IRUSER_Disconnect();
-            }
-
+            MCUHWC_SetPowerLedState(LED_OFF);
             CreateThread(); 
         }
 
@@ -169,6 +163,10 @@ public:
 
     void SetConnected(bool connected) {
         m_isconnected = connected;
+    }
+
+    bool IsConnected() override {
+        return m_isconnected;
     }
 
     void Disconnect();
@@ -217,7 +215,7 @@ private:
     Result SendReceive(const void *request, size_t requestsize, void *response, int responsesize, Handle *events, int64_t timeout, uint8_t expectedhead);
     int ReadPacket(void *out, size_t outlen);
     Result ClearPackets(int count);
-    uint32_t GetLatestInputFromRing();
+    CPPEntry GetLatestInputFromRing();
 
     uint8_t m_initialized = 0;
 
@@ -243,8 +241,10 @@ private:
     CPPCalibrationData m_calibrationdata {};
 
     uint32_t m_latestkeys = 0;
+    CirclePadEntry m_latestentry {};
+
     uint32_t m_oldkeys = 0;
-    uint32_t m_keysstate = 0;
+    CPPEntry m_cppstate {};
 
     PacketType m_expectedpacket = PacketType::None;
     RecvPackageErrorType m_lastreaderror = RecvPackageErrorType::None;

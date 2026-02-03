@@ -167,9 +167,8 @@ void Remapper::GenerateFileLocation() {
 
 char data[0x100];
 
-uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *entry) {
-    char buf[50];
-    uint32_t newstate = hidstate;
+uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *cpadentry, CirclePadEntry *cppentry) {
+    uint32_t newstate = hidstate | m_remaptouchkeys;
 
     for (int i = 0; i < m_keyentries; i++) {
         if ((hidstate & m_remapkeyobjects[i].oldkey) == m_remapkeyobjects[i].oldkey) {
@@ -217,10 +216,39 @@ uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *entry) {
 
     }
 
-    newstate = CirclePadRemap(hidstate, newstate, entry);
+    newstate = CirclePadRemap(hidstate, newstate, cpadentry);
+    newstate = HandleCPPToCpad(cpadentry, cppentry, hidstate, newstate);
 
     return newstate;
 }
+
+uint32_t Remapper::HandleCPPToCpad(CirclePadEntry *cpad, CirclePadEntry *cpp, uint32_t hidstate, uint32_t newstate) {
+    if (!m_docnubtocpad)
+        return newstate;
+
+    if (*cpp > *cpad) {
+        cpp->x = cpad->x;
+        cpp->y = cpad->y;
+
+        if (hidstate & KEY_CSTICK_UP) {
+            newstate &= ~KEY_CSTICK_UP;
+            newstate |= KEY_CPAD_UP;
+        } else if (hidstate & KEY_CSTICK_DOWN) {
+            newstate &= ~KEY_CSTICK_DOWN;
+            newstate |= KEY_CPAD_DOWN;
+        }
+
+        if (hidstate & KEY_CSTICK_LEFT) {
+            newstate &= ~KEY_CSTICK_LEFT;
+            newstate |= KEY_CPAD_LEFT;
+        } else if (hidstate & KEY_CSTICK_RIGHT) {
+            newstate &= ~KEY_CSTICK_RIGHT;
+            newstate |= KEY_CSTICK_RIGHT;
+        }
+    }
+
+    return newstate;
+} 
 
 uint32_t Remapper::CirclePadRemap(uint32_t hidstate, uint32_t newstate, CirclePadEntry *circlepad) {
     /*
@@ -459,6 +487,11 @@ void Remapper::ParseConfigFile() {
         else if (strcasecmp(value->u.object.values[index].name, "dpadtocpad") == 0) {
             json_value *dpadtocpad = value->u.object.values[index].value; // DPAD-TO-CPAD
             m_dodpadtocpad = dpadtocpad->u.boolean & 0xFF;
+        }
+
+        else if (strcasecmp(value->u.object.values[index].name, "cnubtocpad") == 0) {
+            json_value *cnubtocpad = value->u.object.values[index].value; // CNUB-TO-CPAD
+            m_docnubtocpad = cnubtocpad->u.boolean & 0xFF;
         }
 
         else if (strcasecmp(value->u.object.values[index].name, "overridecpadpro") == 0) {

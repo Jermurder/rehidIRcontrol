@@ -27,13 +27,13 @@ Result CPPO3DS::Initialize() {
         return ret;
     }
 
-    mcuHwcInit();
+    //mcuHwcInit();
 
     ret = svcCreateMemoryBlock(&m_sharedmemhandle, (uint32_t)m_sharedmem, CPP_SHARED_MEM_SIZE, MEMPERM_READ, MEMPERM_READWRITE);
     if (R_FAILED(ret))
         goto cleanup2;
 
-    ret = svcCreateEvent(GetExitEvent(), RESET_STICKY);
+    ret = svcCreateEvent(GetExitEvent(), RESET_ONESHOT);
     if (R_FAILED(ret)) 
         goto cleanup3;
 
@@ -82,13 +82,15 @@ void CPPO3DS::Sampling() {
     entry.pressedpadstate = (m_latestkeys ^ m_oldkeys) & ~m_oldkeys;
     entry.releasedpadstate = (m_latestkeys ^ m_oldkeys) & m_oldkeys;
     entry.currpadstate = m_latestkeys;
+    entry.circlepadstate = m_latestentry;
+
     m_ring.WriteToRing(&entry);
 
     m_oldkeys = m_latestkeys;
 }
 
 void CPPO3DS::ScanInput(Remapper *remapper) {
-    m_keysstate = GetLatestInputFromRing();
+    m_cppstate = GetLatestInputFromRing();
 }
 
 static uint32_t CheckSectionUpdateTime(uint32_t id, CPPRing *ring) {
@@ -105,9 +107,9 @@ static uint32_t CheckSectionUpdateTime(uint32_t id, CPPRing *ring) {
     return 0;
 }
 
-uint32_t CPPO3DS::GetLatestInputFromRing() {
+CPPEntry CPPO3DS::GetLatestInputFromRing() {
     uint32_t id = 0;
-    uint32_t latest = 0;
+    CPPEntry latest {};
 
     id = m_ring.GetIndex(); //PAD / circle-pad
 
@@ -115,7 +117,7 @@ uint32_t CPPO3DS::GetLatestInputFromRing() {
         id = 0;
 
     if (CheckSectionUpdateTime(id, &m_ring) == 1)
-        return 0;
+        return latest;
 
     latest = m_ring.GetLatest(id);
 
@@ -157,6 +159,9 @@ int CPPO3DS::WaitForConnection() {
                 CPP_SHARED_MEM_SIZE, m_recvbufsize, CPP_RECV_PACKET_COUNT, \
                 m_sendbufsize, CPP_SEND_PACKET_COUNT, CPP_BAUD_RATE);
 
+        if (R_FAILED(ret))
+            *(u32*)ret = 0xbabf;
+
         ret = IRUSER_GetConnectionStatusEvent(connectionevent);
         ret = IRUSER_GetReceiveEvent(recvevent);
 
@@ -165,29 +170,26 @@ int CPPO3DS::WaitForConnection() {
         // Try four times in quick succession, then wait a second.
         for (int i = 0; i < 4; i++) {
             Result ret2 = IRUSER_RequireConnection(1);
-            if (ret2 == 0xC8A10C01) {
+            if (ret2 == 0xC8A10C01 && !m_sleep) {
                 i--;
                 continue;
             }
 
-            else if (ret2 != 0xC8A10C0B && ret2 != 0xC8A10C0C && ret2 != 0)
-                *(u32*)0xBAAD = ret2;
+            if (ret2 != 0xC8A10C0C && ret2 != 0xC8A10C0B && ret2 != 0 && ret2 != 0xC8A10C01) {
+                *(u32*)ret2 = 0xbabe;
+            }
+
+            MCUHWC_SetPowerLedState(LED_BLUE);
 
             ret = svcWaitSynchronizationN(&handleidx, events, 2, false, 14 * MILLIS);
             if (R_DESCRIPTION(ret) != RD_TIMEOUT) {
                 if (handleidx == 0) {
-                    // Purple for connection event
-                    for (int i = 0; i < 32; i++) {
-                        m_pattern.redPattern[i] = 0xFF;
-                        m_pattern.greenPattern[i] = 0x10;
-                        m_pattern.bluePattern[i] = 0xFF;
-                    }
-
-                    MCUHWC_SetInfoLedPattern(&m_pattern);
+                    MCUHWC_SetPowerLedState(LED_RED);
                     return 0;
                 }
 
                 else if (handleidx == 1) {
+                    MCUHWC_SetPowerLedState(LED_BLUE);
                     Disconnect();
                     return -1;
                 }
@@ -197,11 +199,12 @@ int CPPO3DS::WaitForConnection() {
 
             IRUSER_Disconnect();
         }
-        Disconnect();
 
+        Disconnect();
         svcWaitSynchronization(*GetExitEvent(), 1000 * MILLIS);
     }
 
+    MCUHWC_SetPowerLedState(LED_BLUE);
     Disconnect();
     return -1;
 }
@@ -259,10 +262,12 @@ int CPPO3DS::GetCalibrationData() {
 
     Result ret = SendReceive(&request, sizeof(request), &response, sizeof(response), events, 20 * MILLIS, 0x11);
     if (ret == SAR_EXIT) {
+        MCUHWC_SetPowerLedState(LED_BLUE);
         return -1;
     }
 
     if (ret == SAR_READERROR || ret == SAR_TIMEOUT) {
+        MCUHWC_SetPowerLedState(LED_BLUE);
         Disconnect();
         return -2;
     }
@@ -270,14 +275,7 @@ int CPPO3DS::GetCalibrationData() {
     for (int i = 0; i < 4; i++) {
         if (CheckCalibrationData(&m_calibrationdata, &response.candidates[i])) {
             found = true;
-             // Yellow on recieveing calibration data
-            for (int i = 0; i < 32; i++) {
-                m_pattern.redPattern[i] = 0xFF;
-                m_pattern.greenPattern[i] = 0xFF;
-                m_pattern.bluePattern[i] = 0x10;
-            }
-
-            MCUHWC_SetInfoLedPattern(&m_pattern);
+            MCUHWC_SetPowerLedState(LED_BLINK_RED);
             return 0;
         }
     }
@@ -287,10 +285,12 @@ int CPPO3DS::GetCalibrationData() {
             request.offset = 0x400 + i;
             ret = SendReceive(&request, sizeof(request), &response, sizeof(response), events, 20 * MILLIS, 0x11);
             if (ret == SAR_EXIT) {
+                MCUHWC_SetPowerLedState(LED_BLUE);
                 return -1;
             }
 
             if (ret == SAR_READERROR || ret == SAR_TIMEOUT) {
+                MCUHWC_SetPowerLedState(LED_BLUE);
                 Disconnect();
                 return -2;
             }
@@ -298,6 +298,7 @@ int CPPO3DS::GetCalibrationData() {
             for (int j = 0; j < 4; j++) {
                 if (CheckCalibrationData(&m_calibrationdata, &response.candidates[j])) {
                     found = true;
+                    MCUHWC_SetPowerLedState(LED_BLINK_RED);
                     return 0;
                 }
             }
@@ -307,6 +308,7 @@ int CPPO3DS::GetCalibrationData() {
     if (!found)
         Disconnect();
 
+    MCUHWC_SetPowerLedState(LED_BLUE);
     return -2;
 }
 
@@ -341,6 +343,7 @@ int CPPO3DS::GetInputPackets() {
         if (!response.zrup) keys |= KEY_ZR;
 
         m_latestkeys = CirclePad::ConvertToHidButtons<CirclePadMode::CSTICK>(&entry, keys);
+        m_latestentry = entry;
         //batteryLevel = input_response.battery_level;
     }
 
@@ -353,26 +356,6 @@ static void cppthread(void *param) {
     Result ret = irUserInit();
     if (R_FAILED(ret))
         *(u32*)0xF00D = 0xBABE;
-
-    ret = IRUSER_RequireConnection(1);
-    while (ret == 0xC8A10C01 && !cpp->GetSleep()) {
-        svcSleepThread(100 * MILLIS);
-        ret = IRUSER_RequireConnection(1);
-    }
-
-    cpp->m_pattern.delay = 0x10;
-    cpp->m_pattern.smoothing = 10;
-    cpp->m_pattern.loopDelay = 19;
-    cpp->m_pattern.blinkSpeed = 150;
-
-    // Orangish on thread creation
-    for (int i = 0; i < 32; i++) {
-        cpp->m_pattern.redPattern[i] = 0x00;
-        cpp->m_pattern.greenPattern[i] = 0xFF;
-        cpp->m_pattern.bluePattern[i] = 0x00;
-    }
-
-    MCUHWC_SetInfoLedPattern(&cpp->m_pattern);
 
     while (true) {
         // Wait for CPP connection.

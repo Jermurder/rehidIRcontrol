@@ -66,7 +66,7 @@ void CPPN3DS::ScanInput(Remapper *remapper) {
     uint8_t state = *m_statepa;
 
     if (m_enteringsleep || !m_initialized) {
-        m_keysstate = 0;
+        m_cppstate = {};
         return;
     }
 
@@ -78,7 +78,7 @@ void CPPN3DS::ScanInput(Remapper *remapper) {
         irrstInit_(0);
     }
 
-    m_keysstate = GetLatestInputFromRing();
+    m_cppstate = GetLatestInputFromRing();
 }
 
 static uint32_t CheckSectionUpdateTime(uint32_t id, CPPRing *ring) {
@@ -95,9 +95,9 @@ static uint32_t CheckSectionUpdateTime(uint32_t id, CPPRing *ring) {
     return 0;
 }
 
-uint32_t CPPN3DS::GetLatestInputFromRing() {
+CPPEntry CPPN3DS::GetLatestInputFromRing() {
     uint32_t id = 0;
-    uint32_t latest = 0;
+    CPPEntry latest {};
 
     id = m_ring.GetIndex(); //PAD / circle-pad
 

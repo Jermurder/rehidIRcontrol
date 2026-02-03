@@ -1,14 +1,14 @@
 #pragma once
 #include <3ds.h>
 #include <cstring>
+#include "CirclePad.hpp"
 #include "exclusive_rw.hpp"
 
 struct CPPEntry {
     int32_t currpadstate;
     int32_t pressedpadstate;
     int32_t releasedpadstate;
-    int16_t pad0; // circlepad x
-    int16_t pad1; // circlepad y
+    CirclePadEntry circlepadstate;
 };
 
 static_assert(sizeof(CPPEntry) == 0x10, "Sizeof CPPEntry is not 0x10 bytes!");
@@ -27,8 +27,8 @@ public:
         //memset(&m_entries, 0, sizeof(m_entries) * sizeof(CPPEntry));
     }
 
-    int32_t GetLatest(uint8_t index) {
-        return m_entries[index].currpadstate;
+    CPPEntry GetLatest(uint8_t index) {
+        return m_entries[index];
     };
 
     int32_t GetIndex() {

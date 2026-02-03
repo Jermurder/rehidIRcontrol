@@ -40,8 +40,9 @@ struct key_s {
 class Remapper {
 public:
     void GenerateFileLocation();
-    uint32_t Remap(uint32_t hidtstate, CirclePadEntry *circlePad);
+    uint32_t Remap(uint32_t hidtstate, CirclePadEntry *cpad, CirclePadEntry *cpp);
     uint32_t CirclePadRemap(uint32_t hidstate, uint32_t newstate, CirclePadEntry *circlepad);
+    uint32_t HandleCPPToCpad(CirclePadEntry *cpp, CirclePadEntry *cpad, uint32_t hidstate, uint32_t newstate);
     Result ReadConfigFile();
     void ParseConfigFile();
     void Reset() {
@@ -52,6 +53,7 @@ public:
         m_turboentries = 0;
         m_dodpadtocpad = 0;
         m_docpadtodpad = 0;
+        m_docnubtocpad = 0;
         m_overridecpadpro = 0;
         m_homebuttonkeys = 0;
     }
@@ -73,6 +75,7 @@ public:
     uint8_t m_turboentries;
     uint8_t m_docpadtodpad = 0;
     uint8_t m_dodpadtocpad = 0;
+    uint8_t m_docnubtocpad = 0;
     int16_t m_touchoveridex = 0;
     int16_t m_touchoveridey = 0;
     int16_t m_cpadoveridex = -1;

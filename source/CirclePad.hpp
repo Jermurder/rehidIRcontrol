@@ -1,8 +1,17 @@
 #pragma once
 #include <3ds.h>
+
 struct CirclePadEntry {
     int16_t x;
     int16_t y;
+
+    friend bool operator<(const CirclePadEntry& left, const CirclePadEntry& right) {
+        return right.x > left.x || right.y > left.y;
+    }
+
+    friend bool operator>(const CirclePadEntry& left, const CirclePadEntry& right) {
+        return right.x < left.x || right.y < left.y;
+    }
 };
 
 enum CirclePadMode {

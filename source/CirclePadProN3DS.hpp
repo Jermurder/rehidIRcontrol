@@ -12,8 +12,8 @@ public:
     void Sampling() override;
     void ScanInput(Remapper *remapper) override;
 
-    uint32_t GetInputs() override {
-        return m_keysstate;
+    CPPEntry GetInputs() override {
+        return m_cppstate;
     }
 
     Handle *GetTimer() override {
@@ -34,14 +34,18 @@ public:
 
     void SetTimer() override;
 
+    bool IsConnected() override {
+        return true; // Always connected on n3ds
+    }
+
 private:
-    uint32_t GetLatestInputFromRing();
+    CPPEntry GetLatestInputFromRing();
 
     Handle m_timer;
     uint32_t *m_latestkeyspa = nullptr;
     uint32_t *m_statepa = nullptr;
     uint32_t m_latestkeys = 0;
-    uint32_t m_keysstate = 0;
+    CPPEntry m_cppstate {};
 
     uint8_t m_initialized = 0;
     uint8_t m_enteringsleep = 0;

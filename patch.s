@@ -102,4 +102,7 @@ orr r1, r1, #0x20000
 .org 0x1048E4
 orr r0, r0, #0x10000
 
+.org 0x1107E4 // Fix sleep mode
+bl 0x107218
+
 .close

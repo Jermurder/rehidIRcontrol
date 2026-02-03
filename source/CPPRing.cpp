@@ -11,6 +11,8 @@ void CPPRing::WriteToRing(CPPEntry *entry) {
     ExclusiveWrite(&m_entries[index].currpadstate, entry->currpadstate);
     ExclusiveWrite(&m_entries[index].pressedpadstate, entry->pressedpadstate);
     ExclusiveWrite(&m_entries[index].releasedpadstate, entry->releasedpadstate);
+    ExclusiveWrite((u16*)&m_entries[index].circlepadstate.x, entry->circlepadstate.x);
+    ExclusiveWrite((u16*)&m_entries[index].circlepadstate.y, entry->circlepadstate.y);
 
     if (index == 0) { // When index is 0 we need to update tickcount
         m_oldtickcount = m_tickcount;
