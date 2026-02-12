@@ -7,12 +7,6 @@
 #include "iruser.hpp"
 #include "CirclePadProO3DS.hpp"
 
-extern "C" {
-#include "irpatch.h"
-}
-
-extern void _putchar(char character);
-
 #ifdef CTR_ALIGN
 static uint8_t CTR_ALIGN(8) irthreadstack[0x1000];
 #else
@@ -44,9 +38,6 @@ Result CPPO3DS::Initialize() {
     ret = svcCreateEvent(GetSleepEvent(), RESET_ONESHOT);
     if (R_FAILED(ret)) 
         goto cleanup4;
-
-    // If we'vw reached till this point, then we are ready to patch IR
-    DoPatchesForIR();
 
     ret = CreateThread();
 
