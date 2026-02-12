@@ -1,9 +1,4 @@
 #include "Touch.hpp"
-#include <stdio.h>
-#include "printf.h"
-void _putchar(char character) {
-    svcOutputDebugString(&character, 1);
-}
 
 void Touch::Initialize() {
     if (!m_initialized) {

@@ -1,16 +1,9 @@
 #include "Pad.hpp"
-#include "printf.h"
 #include "irrst.hpp"
 extern "C" {
 #include "gpio.h"
 }
 
-extern void _putchar(char character);
-/*
-{
-    svcOutputDebugString(&character, 1);
-}
-*/
 void Pad::Initialize() {
     if (!m_isinitialized) {
         m_isinitialized = true;

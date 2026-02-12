@@ -1,7 +1,6 @@
 #include <strings.h>
 #include "Remapper.hpp"
 #include "json.h"
-#include "printf.h"
 
 static Result PMDBG_GetCurrentAppInfo(FS_ProgramInfo *outProgramInfo, u32 *outPid, u32 *outLaunchFlags) {
     Result ret = 0;

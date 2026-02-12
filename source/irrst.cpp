@@ -3,7 +3,6 @@
 #include <3ds.h>
 #include "CPPRing.hpp"
 #include "irrst.hpp"
-#include "printf.h"
 
 Handle irrstHandle_;
 Handle irrstMemHandle_;

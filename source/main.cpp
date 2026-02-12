@@ -99,10 +99,7 @@ extern "C"
         if (ret != 0)
             *(u32*)ret = 0xFFAA;
 
-        // gdbHioDevInit();
-        // gdbHioDevRedirectStdStreams(false, true, false);
         ptmSysmInit();
-        //  logInit();
     }
 
     // this is called after main exits
