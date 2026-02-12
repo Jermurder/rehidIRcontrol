@@ -1,4 +1,5 @@
 #include <3ds.h>
+#include "csvc.h"
 #include "iruser.hpp"
 
 Handle iruserhandle;
@@ -10,7 +11,7 @@ Result irUserInit() {
 
     Result ret = 0;
 
-    if (R_FAILED(ret = srvGetServiceHandle(&iruserhandle, "ir:USER")))
+    if (R_FAILED(ret = srvGetServiceHandle(&iruserhandle, "ir:USE")))
         AtomicDecrement(&iruserrefcount);
 
     return ret;

@@ -135,11 +135,12 @@ extern "C"
     }
 }
 
+uint8_t sttbuf[0x100];
+
 int main() {
     Hid hid;
-    IPC ipc;
 
-    const char *srvnames[] = {"", "hid:SPVR", "hid:USER", "hid:QTM", "hid:NFC"};
+    const char *srvnames[] = {"", "hid:SPVR", "hid:USER", "hid:QTM", "hid:NFC", "ir:USER"};
 
     hid.CheckIfIRPatchExists();
     hid.CreateAndMapMemoryBlock();
@@ -150,7 +151,7 @@ int main() {
     hid.InitializeDebugPad();
     hid.StartThreadsForSampling();
 
-    const s32 SERVICECOUNT = 4;
+    const s32 SERVICECOUNT = 5;
     const s32 INDEXMAX = SERVICECOUNT * 7 + 1;
     const s32 REMOTESESSIONINDEX = SERVICECOUNT + 1;
 
@@ -176,6 +177,12 @@ int main() {
     Handle target = 0;
     s32 targetindex = -1;
     int terminationflag = 0;
+
+
+    // This is required to recieve buffers for ir:USER commands
+    u32 *staticbuf = getThreadStaticBuffers();
+    staticbuf[0] = IPC_Desc_StaticBuffer(0x100, 0);
+    staticbuf[1] = (uint32_t)sttbuf;
 
     for (;;) {
         s32 index;
@@ -234,7 +241,12 @@ int main() {
             handlecount++;
 
         } else if (index >= REMOTESESSIONINDEX && index < INDEXMAX) {
-            ipc.HandleCommands(&hid);
+            int32_t idx = serviceindexes[index - REMOTESESSIONINDEX];
+            if (idx == 4)
+                IPC::HandleMockIRUserCommands(&hid);
+            else
+                IPC::HandleHidCommands(&hid);
+
             target = sessionhandles[index];
             targetindex = index;
 

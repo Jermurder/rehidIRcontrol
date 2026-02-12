@@ -7,6 +7,10 @@
 #include "iruser.hpp"
 #include "CirclePadProO3DS.hpp"
 
+extern "C" {
+#include "irpatch.h"
+}
+
 extern void _putchar(char character);
 
 #ifdef CTR_ALIGN
@@ -40,6 +44,9 @@ Result CPPO3DS::Initialize() {
     ret = svcCreateEvent(GetSleepEvent(), RESET_ONESHOT);
     if (R_FAILED(ret)) 
         goto cleanup4;
+
+    // If we'vw reached till this point, then we are ready to patch IR
+    DoPatchesForIR();
 
     ret = CreateThread();
 
@@ -91,6 +98,19 @@ void CPPO3DS::Sampling() {
 
 void CPPO3DS::ScanInput(Remapper *remapper) {
     m_cppstate = GetLatestInputFromRing();
+
+    if (remapper->m_docpadtocnub) {
+        CirclePadEntry entry {remapper->m_rawcpadx, remapper->m_rawcpady};
+        m_mock.SetLatestCirclePadData(&entry);
+    } else {
+        m_mock.SetLatestCirclePadData(&m_cppstate.circlepadstate);
+    }
+
+    if (m_mock.IsConnected()) {
+        Handle event;
+        m_mock.GetRecvEvent(&event);
+        svcSignalEvent(event);
+    }
 }
 
 static uint32_t CheckSectionUpdateTime(uint32_t id, CPPRing *ring) {
@@ -275,6 +295,7 @@ int CPPO3DS::GetCalibrationData() {
     for (int i = 0; i < 4; i++) {
         if (CheckCalibrationData(&m_calibrationdata, &response.candidates[i])) {
             found = true;
+            m_mock.SetCalibrationData(&m_calibrationdata);
             MCUHWC_SetPowerLedState(LED_BLINK_RED);
             return 0;
         }
@@ -387,20 +408,6 @@ static void cppthread(void *param) {
     cpp->Disconnect();
     irUserFinalize();
 
-    // cpp->m_pattern.delay = 0;
-    // cpp->m_pattern.smoothing = 0;
-    // cpp->m_pattern.loopDelay = 0;
-    // cpp->m_pattern.blinkSpeed = 0;
-
-    // // White on exit
-    // for (int i = 0; i < 32; i++) {
-    //     cpp->m_pattern.redPattern[i] = 0x0;
-    //     cpp->m_pattern.greenPattern[i] = 0x0;
-    //     cpp->m_pattern.bluePattern[i] = 0x0;
-    // }
-
-    // MCUHWC_SetInfoLedPattern(&cpp->m_pattern);
-
     MyThread_Exit();
 }
 
@@ -411,6 +418,8 @@ int CPPO3DS::ReadPacket(void *out, size_t outlen) {
     }
 
     CPPPacketInfo *info = &m_sharedmem->packetinfos[m_packetid];
+
+    // skip to the end of the struct and to start of where actual packets live
     uint8_t *start = ((uint8_t *)&m_sharedmem->packetinfos[CPP_RECV_PACKET_COUNT]);
     uint8_t *end = start + m_recvbufsize;
 

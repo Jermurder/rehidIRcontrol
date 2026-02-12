@@ -91,6 +91,7 @@ static inline bool isServiceUsable(const char *name) {
 }
 
 void Hid::InitializeIR() {
+    svcCreateEvent(&dummyhandles[0], RESET_STICKY);
 
     /* if one service is usable, then so should the others */
     while (!isServiceUsable("ir:u"))

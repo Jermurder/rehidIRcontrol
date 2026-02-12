@@ -54,6 +54,7 @@ public:
         m_dodpadtocpad = 0;
         m_docpadtodpad = 0;
         m_docnubtocpad = 0;
+        m_docpadtocnub = 0;
         m_overridecpadpro = 0;
         m_homebuttonkeys = 0;
     }
@@ -61,6 +62,11 @@ public:
     const bool isGlobal() const {
         return m_isglobal;
     };
+
+    void SaveRawCpad(CirclePadEntry *entry) {
+        m_rawcpadx = entry->x;
+        m_rawcpady = entry->y;
+    }
 
     KeyObject m_remapkeyobjects[10]; // Support upto 10 remapable key combos
     KeyAndCoordObject m_remaptouchobjects[10]; // Support upto 10 key > touch binds
@@ -73,15 +79,22 @@ public:
     uint8_t m_touchtokeysentries;
     uint8_t m_cpadentries;
     uint8_t m_turboentries;
+
     uint8_t m_docpadtodpad = 0;
     uint8_t m_dodpadtocpad = 0;
+
     uint8_t m_docnubtocpad = 0;
+    uint8_t m_docpadtocnub = 0;
+
     int16_t m_touchoveridex = 0;
     int16_t m_touchoveridey = 0;
-    int16_t m_cpadoveridex = -1;
-    int16_t m_cpadoveridey = -1;
+
+    int16_t m_rawcpadx = 0;
+    int16_t m_rawcpady = 0;
+
     uint32_t m_remaptouchkeys = 0;
     uint32_t m_homebuttonkeys = 0;
+
     uint8_t m_release = 0;
     uint8_t m_overridecpadpro = 0;
 

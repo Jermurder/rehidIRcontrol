@@ -219,6 +219,16 @@ uint32_t Remapper::Remap(uint32_t hidstate, CirclePadEntry *cpadentry, CirclePad
     newstate = CirclePadRemap(hidstate, newstate, cpadentry);
     newstate = HandleCPPToCpad(cpadentry, cppentry, hidstate, newstate);
 
+    /* This is a hack and all should be done in place */
+    if (m_docpadtocnub) {
+        cpadentry->x = 0;
+        cpadentry->y = 0;
+        newstate &= ~KEY_CPAD_UP;
+        newstate &= ~KEY_CPAD_DOWN;
+        newstate &= ~KEY_CPAD_LEFT;
+        newstate &= ~KEY_CPAD_RIGHT;
+    }
+
     return newstate;
 }
 
@@ -227,8 +237,8 @@ uint32_t Remapper::HandleCPPToCpad(CirclePadEntry *cpad, CirclePadEntry *cpp, ui
         return newstate;
 
     if (*cpp > *cpad) {
-        cpp->x = cpad->x;
-        cpp->y = cpad->y;
+        cpad->x = cpp->x;
+        cpad->y = cpp->y;
 
         if (hidstate & KEY_CSTICK_UP) {
             newstate &= ~KEY_CSTICK_UP;
@@ -243,7 +253,7 @@ uint32_t Remapper::HandleCPPToCpad(CirclePadEntry *cpad, CirclePadEntry *cpp, ui
             newstate |= KEY_CPAD_LEFT;
         } else if (hidstate & KEY_CSTICK_RIGHT) {
             newstate &= ~KEY_CSTICK_RIGHT;
-            newstate |= KEY_CSTICK_RIGHT;
+            newstate |= KEY_CPAD_RIGHT;
         }
     }
 
@@ -492,6 +502,11 @@ void Remapper::ParseConfigFile() {
         else if (strcasecmp(value->u.object.values[index].name, "cnubtocpad") == 0) {
             json_value *cnubtocpad = value->u.object.values[index].value; // CNUB-TO-CPAD
             m_docnubtocpad = cnubtocpad->u.boolean & 0xFF;
+        }
+
+        else if (strcasecmp(value->u.object.values[index].name, "cpadtocnub") == 0) {
+            json_value *cpadtocnub = value->u.object.values[index].value; // CPAD-TO-CNUB
+            m_docpadtocnub = cpadtocnub->u.boolean & 0xFF;
         }
 
         else if (strcasecmp(value->u.object.values[index].name, "overridecpadpro") == 0) {

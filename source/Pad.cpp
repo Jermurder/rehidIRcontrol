@@ -49,11 +49,11 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
 #endif
 
     m_ir->ScanInput(remapper);
-    CPPEntry cpadentry = m_ir->GetInputs();
+    CPPEntry cppentry = m_ir->GetInputs();
     uint32_t additionalcpad = CirclePad::ConvertToHidButtons<CirclePadMode::CPAD>(circlepad, latest); // if need be this also sets the circlepad entry to 0
 
-    latest = latest | cpadentry.currpadstate | remapper->m_remaptouchkeys | additionalcpad;
-    latest = remapper->Remap(latest, circlepad, &cpadentry.circlepadstate);
+    latest = latest | cppentry.currpadstate | remapper->m_remaptouchkeys | additionalcpad;
+    latest = remapper->Remap(latest, circlepad, &cppentry.circlepadstate);
 
     entry->pressedpadstate = (latest ^ m_latestkeys) & ~m_latestkeys;
     entry->releasedpadstate = (latest ^ m_latestkeys) & m_latestkeys;
@@ -75,6 +75,11 @@ void Pad::Sampling(u32 rcpr, Remapper *remapper) {
     // to build.
 #ifndef DISABLE_CPAD
     m_circlepad.RawToCirclePadCoords(&finalcirclepad, rawcirclepad);
+
+    /* These raw values can then be later on accessed during cpadtocnub
+       remapping.
+    */
+    remapper->SaveRawCpad(&rawcirclepad);
 #endif
 
     if (m_counter % 3 == 0) {

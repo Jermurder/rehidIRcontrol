@@ -66,6 +66,10 @@ public:
         return m_ir;
     }
 
+    CPPO3DS *GetCPPO3DSObject() {
+        return &m_cppo3ds; 
+    }
+
     Handle *GetSharedMemHandle() {
         return &m_sharedmemhandle;
     };
