@@ -1,5 +1,5 @@
 #pragma once
-#include "AccelerometerRing.hpp"
+#include "rings/AccelerometerRing.hpp"
 
 struct AccelerometerCalibration {
     int16_t scalex;

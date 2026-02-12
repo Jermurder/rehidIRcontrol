@@ -1,8 +1,8 @@
 #include <3ds.h>
 #include "hid.hpp"
 #include "ipc.hpp"
-#include "mcuhid.hpp"
-#include "irrst.hpp"
+#include "services/mcuhid.hpp"
+#include "services/irrst.hpp"
 #include <cstdio>
 #include <cstring>
 extern "C" {

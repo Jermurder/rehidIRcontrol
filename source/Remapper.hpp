@@ -1,6 +1,5 @@
 #pragma once
 #include <3ds.h>
-#include "irrst.hpp"
 #include "CirclePad.hpp"
 
 struct KeyObject {

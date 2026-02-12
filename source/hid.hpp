@@ -12,7 +12,7 @@
 extern "C"
 {
 #include "mythread.h"
-#include "codec.h"
+#include "services/codec.h"
 }
 
 class Hid {

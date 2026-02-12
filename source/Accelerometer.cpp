@@ -1,5 +1,5 @@
 #include "Accelerometer.hpp"
-#include "mcuhid.hpp"
+#include "services/mcuhid.hpp"
 
 void Accelerometer::Initialize() {
     AccelerometerCalibration calib;

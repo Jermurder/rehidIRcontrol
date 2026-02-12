@@ -1,5 +1,5 @@
 #pragma once
-#include "GyroscopeRing.hpp"
+#include "rings/GyroscopeRing.hpp"
 
 struct GyroscopeInternalStruct {
     uint8_t devid;

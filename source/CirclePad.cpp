@@ -1,7 +1,6 @@
 #include <cmath>
 #include "CirclePad.hpp"
 
-
 void CirclePad::GetConfigSettings() {
     struct circlepadcalib {
         float scalex;

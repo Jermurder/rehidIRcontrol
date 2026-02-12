@@ -1,6 +1,6 @@
 #include <3ds.h>
-#include "iru.hpp"
-#include "irrst.hpp"
+#include "services/iru.hpp"
+#include "services/irrst.hpp"
 #include "CirclePadProN3DS.hpp"
 
 #define PA_PTR(addr)            (void *)((u32)(addr) | 1 << 31);

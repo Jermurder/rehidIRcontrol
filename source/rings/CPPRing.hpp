@@ -1,7 +1,7 @@
 #pragma once
 #include <3ds.h>
 #include <cstring>
-#include "CirclePad.hpp"
+#include "../CirclePad.hpp"
 #include "exclusive_rw.hpp"
 
 struct CPPEntry {

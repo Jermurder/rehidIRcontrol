@@ -1,5 +1,5 @@
 #include <3ds.h>
-#include "DebugPadRing.hpp"
+#include "rings/DebugPadRing.hpp"
 
 class DebugPad {
 public:

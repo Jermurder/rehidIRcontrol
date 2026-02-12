@@ -1,5 +1,5 @@
 #include "ipc.hpp"
-#include "mcuhid.hpp"
+#include "services/mcuhid.hpp"
 #include <cstdio>
 
 extern char buf[100];
@@ -202,8 +202,8 @@ void HandleMockIRUserCommands(Hid *hid) {
     uint32_t *cmdbuf = getThreadCommandBuffer();
     uint16_t cmdid = cmdbuf[0] >> 16;
 
-    sprintf(buf, "New cmid type : %X\n", cmdid);
-    svcOutputDebugString(buf, strlen(buf));
+    // sprintf(buf, "New cmid type : %X\n", cmdid);
+    // svcOutputDebugString(buf, strlen(buf));
 
     IRUserMock *mock = hid->GetCPPO3DSObject()->GetMockIRUSERCommands();
 

@@ -1,6 +1,6 @@
 #include <3ds.h>
 #include "slider.hpp"
-#include "mcuhid.hpp"
+#include "services/mcuhid.hpp"
 
 void Slider::ReadValuesFromMCU() {
     Result ret = mcuHidGetSliderState((u8*)&m_rawstate);

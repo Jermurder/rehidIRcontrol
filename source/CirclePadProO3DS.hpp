@@ -2,7 +2,7 @@
 #include <3ds.h>
 #include "CPPDefs.hpp"
 #include "ir.hpp"
-#include "iruser.hpp"
+#include "services/iruser.hpp"
 #include "mock/IRUserMock.hpp"
 
 extern "C" {

@@ -1,5 +1,5 @@
 #pragma once
-#include "TouchRing.hpp"
+#include "rings/TouchRing.hpp"
 #include "Remapper.hpp"
 
 struct touchcfg {

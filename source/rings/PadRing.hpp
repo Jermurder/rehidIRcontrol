@@ -1,7 +1,7 @@
 #pragma once
 #include <3ds.h>
 #include "exclusive_rw.hpp"
-#include "CirclePad.hpp"
+#include "../CirclePad.hpp"
 
 struct PadEntry {
     s32 currpadstate;

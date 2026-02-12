@@ -1,6 +1,7 @@
 #include <3ds.h>
+#include <cstring> // for memcpy
 #include "mcuhid.hpp"
-#include <cstring>
+
 Handle mcuHidHandle;
 Result mcuHidInit() {
     Result ret = 0;

@@ -1,8 +1,8 @@
 #include "Gyroscope.hpp"
-#include "mcuhid.hpp"
+#include "services/mcuhid.hpp"
 extern "C" {
-#include "gpio.h"
-#include "i2c.h"
+#include "services/gpio.h"
+#include "services/i2c.h"
 }
 
 void Gyroscope::DisableSampling() {

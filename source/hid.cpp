@@ -1,15 +1,14 @@
 #include <malloc.h>
 #include <new>
 #include "hid.hpp"
-#include "PadRing.hpp"
 #include <cstring>
-#include "irrst.hpp"
+#include "services/irrst.hpp"
 #include "code_ips.h"
 extern "C"
 {
 #include "csvc.h"
-#include "gpio.h"
-#include "i2c.h"
+#include "services/gpio.h"
+#include "services/i2c.h"
 }
 
 #ifdef CTR_ALIGN

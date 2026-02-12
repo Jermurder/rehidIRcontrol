@@ -1,7 +1,7 @@
 #pragma once
 #include <3ds.h>
 #include "Remapper.hpp"
-#include "CPPRing.hpp"
+#include "rings/CPPRing.hpp"
 
 class IR {
 

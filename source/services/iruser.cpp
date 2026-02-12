@@ -1,5 +1,4 @@
 #include <3ds.h>
-#include "csvc.h"
 #include "iruser.hpp"
 
 Handle iruserhandle;

@@ -1,6 +1,6 @@
 #pragma once
 #include <3ds.h>
-#include "iruser.hpp"
+#include "services/iruser.hpp"
 
 struct CPPSharedMemHeader {
     uint32_t recieveresult;

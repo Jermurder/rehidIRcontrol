@@ -1,6 +1,6 @@
 #pragma once
 #include <3ds.h>
-#include "AccelerometerRing.hpp" // For AccelerometerEntry
+#include "../rings/AccelerometerRing.hpp" // For AccelerometerEntry
 
 Result mcuHidInit();
 void   mcuHidExit();

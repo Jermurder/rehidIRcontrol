@@ -1,6 +1,6 @@
 #pragma once
 #include <3ds.h>
-#include "CPPRing.hpp"
+#include "../rings/CPPRing.hpp"
 
 void irrstExit_(void);
 int irrstGetRefCount_();

@@ -1,5 +1,5 @@
 #include <3ds.h>
-#include "PadRing.hpp"
+#include "rings/PadRing.hpp"
 #include "CirclePad.hpp"
 #include "Remapper.hpp"
 #include "slider.hpp"

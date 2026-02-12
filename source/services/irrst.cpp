@@ -1,7 +1,6 @@
 #include <new>
 #include <cstdlib>
 #include <3ds.h>
-#include "CPPRing.hpp"
 #include "irrst.hpp"
 
 Handle irrstHandle_;

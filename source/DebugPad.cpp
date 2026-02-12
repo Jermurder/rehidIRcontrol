@@ -1,7 +1,7 @@
 #include "DebugPad.hpp"
 #include "CirclePad.hpp"
 extern "C" {
-#include "i2c.h"
+#include "services/i2c.h"
 }
 
 static uint8_t DecryptData(uint8_t buf) {

@@ -2,8 +2,7 @@
 #include <3ds.h>
 #include "ir.hpp"
 #include "Remapper.hpp"
-#include "CPPRing.hpp"
-
+#include "rings/CPPRing.hpp"
 
 /* Samples controls handled by the IR module, i.e, CPAD Pro/Nub */
 class CPPN3DS : public IR {

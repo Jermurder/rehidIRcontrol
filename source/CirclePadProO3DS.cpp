@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <cstring>
 #include "crc8.hpp"
-#include "iruser.hpp"
 #include "CirclePadProO3DS.hpp"
 
 #ifdef CTR_ALIGN
