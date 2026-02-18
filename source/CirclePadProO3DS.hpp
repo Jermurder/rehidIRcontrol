@@ -148,6 +148,7 @@ private:
 
     uint32_t m_latestkeys = 0;
     CirclePadEntry m_latestentry {};
+    CirclePadEntry m_latestentryraw {};
 
     uint32_t m_oldkeys = 0;
     CPPEntry m_cppstate {};

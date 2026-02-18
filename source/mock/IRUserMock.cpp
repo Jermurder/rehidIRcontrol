@@ -319,12 +319,7 @@ Result IRUserMock::ReleaseRecievedData(uint32_t count) {
 }
 
 void IRUserMock::SetCalibrationData(CPPCalibrationData *data) {
-    LightLock_Lock(&m_lock);
-
+    // LightLock_Lock(&m_lock);
     m_calibration = *data;
-    /* Signal that we have disconnected, to allow the game to read the
-       new calibration packet */
-    m_shmem->header.connectionstatus = IRUSER_ConnectionStatus::Disconnected;
-    svcSignalEvent(m_handles[CONNECTION_EVENT_HANDLE_IDX]);
-    LightLock_Unlock(&m_lock);
+    // LightLock_Unlock(&m_lock);
 }

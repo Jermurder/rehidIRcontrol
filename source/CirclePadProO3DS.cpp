@@ -89,8 +89,9 @@ void CPPO3DS::Sampling() {
 void CPPO3DS::ScanInput(Remapper *remapper) {
     m_cppstate = GetLatestInputFromRing();
 
-    if (remapper->m_docpadtocnub) {
-        CirclePadEntry entry {remapper->m_rawcpadx, remapper->m_rawcpady};
+    CirclePadEntry entry {remapper->m_rawcpadx, remapper->m_rawcpady};
+
+    if (remapper->m_docpadtocnub && entry > m_cppstate.circlepadstate) {
         m_mock.SetLatestCirclePadData(&entry);
     } else {
         m_mock.SetLatestCirclePadData(&m_cppstate.circlepadstate);
@@ -354,7 +355,13 @@ int CPPO3DS::GetInputPackets() {
         if (!response.zrup) keys |= KEY_ZR;
 
         m_latestkeys = CirclePad::ConvertToHidButtons<CirclePadMode::CSTICK>(&entry, keys);
-        m_latestentry = entry;
+
+        if (m_mock.IsConnected()) {
+            m_latestentry.x = response.x;
+            m_latestentry.y = response.y;
+        } else {
+            m_latestentry = entry;
+        }
         //batteryLevel = input_response.battery_level;
     }
 
