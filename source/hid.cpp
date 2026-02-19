@@ -4,13 +4,15 @@
 #include "PadRing.hpp"
 #include <cstring>
 #include "irrst.hpp"
-#include "code_ips.h"
+#include "ir_control.hpp"
 extern "C"
 {
 #include "csvc.h"
 #include "gpio.h"
 #include "i2c.h"
 }
+
+#define DISABLE_IR
 
 #ifdef CTR_ALIGN
 static uint8_t CTR_ALIGN(8) hidthreadstack[0x1000];
@@ -103,7 +105,7 @@ static inline bool isServiceUsable(const char *name) {
 u8 irneeded = 0;
 static void irInit() {
     while (!isServiceUsable("ir:u"))
-        svcSleepThread(1e+9); // Wait For service
+        svcSleepThread(1e+9);
 
     srvSetBlockingPolicy(true);
     Result ret = iruInit_();
@@ -124,17 +126,17 @@ static void SamplingFunction(void *argv) {
     Handle *gyrointrevent = hid->GetGyroscope()->GetIntrEvent();
     Handle *debugpadtimer = hid->GetDebugPad()->GetTimer();
     LightLock *lock = hid->GetSleepLock();
-#ifndef DISABLE_IR
-    irInit();
-#endif
+    initIR();
+    startReceive();
     int32_t out;
 
     while (!*hid->ExitThread()) {
-#ifndef DISABLE_IR
-        Handle handles[] = {irtimer, *padtimer, *debugpadtimer, *gyrointrevent, *accelintrevent};
-#else
+
+        pollReceive();
+
+        if (!g_receiveActive)
+            startReceive();
         Handle handles[] = {*padtimer, *debugpadtimer, *gyrointrevent, *accelintrevent};
-#endif
         LightLock_Lock(lock);
         ret = svcWaitSynchronizationN(&out, handles, CASE_COUNT, false, -1LL);
 
@@ -209,10 +211,7 @@ void Hid::StartThreadsForSampling() {
 void Hid::EnteringSleepMode() {
     LightLock_Lock(&m_sleeplock); // now that main thread accquired the lock, sampling thread will get stuck
     svcClearEvent(dummyhandles[2]);
-#ifndef DISABLE_IR
-    iruExit_();
-#endif
-
+    irExit();
     PTMSYSM_NotifySleepPreparationComplete(0);
 }
 
@@ -226,9 +225,8 @@ void Hid::ExitingSleepMode() {
     m_debugpadring->Reset();
     m_pad.SetTimer();
     m_debugpad.SetTimer();
-#ifndef DISABLE_IR
     irInit();
-#endif
+    startReceive();
 
     PTMSYSM_NotifySleepPreparationComplete(0);
 }
@@ -243,28 +241,4 @@ void Hid::RemapGenFileLoc() {
         *(u32*)ret = 0xF00FBABE;
 
     m_remapper.ParseConfigFile();
-}
-
-void Hid::CheckIfIRPatchExists() {
-    Handle fshandle;
-    Result ret = FSUSER_OpenFileDirectly(&fshandle, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL), fsMakePath(PATH_ASCII, "/luma/sysmodules/0004013000003302.ips"), FS_OPEN_READ, 0);
-
-    if (ret) { // Does not exist
-        u64 archivesd;
-        FSUSER_OpenArchive(&archivesd, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
-        ret = FSUSER_OpenFileDirectly(&fshandle, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, NULL), fsMakePath(PATH_ASCII, "/luma/sysmodules/0004013000003302.ips"), FS_OPEN_WRITE | FS_OPEN_CREATE, 0);
-
-        if (R_FAILED(ret))
-            *(u32*)0xF009F009 = ret; // Shouldn't have happened
-
-        ret = FSFILE_Write(fshandle, nullptr, 0, code_ips, code_ips_size, 0);
-
-        if (R_FAILED(ret))
-            *(u32*)0xf009f010 = ret; // Neither this should happen
-
-        FSFILE_Close(fshandle);
-        PTMSYSM_RebootAsync(2e+9);
-    }
-
-    return ;
 }

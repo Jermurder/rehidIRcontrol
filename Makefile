@@ -38,6 +38,8 @@ ifdef ENABLE_DEBUGPAD_REMAPPING
 CFLAGS	+=	-DENABLE_DEBUGPAD_REMAPPING=1
 endif
 
+DISABLE_IR := 1
+
 ifdef DISABLE_IR
 CFLAGS	+=	-DDISABLE_IR=1
 endif
@@ -48,7 +50,7 @@ endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=c++20
 ASFLAGS	:=	$(ARCH)
-LDFLAGS	=	-specs=3dsx.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS	=	-specs=3dsx.specs $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,--wrap=__syscall_getreent
 
 LIBS	:= -lctru
 #LIBS	:= -lctrud
