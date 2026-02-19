@@ -4,6 +4,7 @@
 extern "C" {
 #include "gpio.h"
 }
+#include "ir_control.hpp"
 
 extern void _putchar(char character);
 /*
@@ -48,8 +49,10 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
     }
 
 #endif
-
-    latest = m_circlepad.ConvertToHidButtons(circlepad, latest); // if need be this also sets the circlepad entry to 0
+    latest |= IR_GetButtons();
+    circlepad->x = IR_GetStickX();
+    circlepad->y = IR_GetStickY();
+    latest = m_circlepad.ConvertToHidButtons(circlepad, latest);
 
     if (irneeded == 1) {
         iruScanInput_();

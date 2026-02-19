@@ -64,7 +64,6 @@ public:
     };
 
     void RemapGenFileLoc();
-    void CheckIfIRPatchExists();
     Handle dummyhandles[4] = {0};
 private:
     Handle m_sharedmemhandle;

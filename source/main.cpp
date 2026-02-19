@@ -89,6 +89,10 @@ extern "C"
         fake_heap_end = fake_heap_start + __ctru_heap_size;
     }
 
+    struct _reent* __wrap___syscall_getreent(void) {
+        return _impure_ptr;
+    }
+
     void __appInit() {
         srvSysInit();
         fsSysInit();
@@ -139,7 +143,6 @@ int main() {
 
     const char *srvnames[] = {"", "hid:SPVR", "hid:USER", "hid:QTM", "hid:NFC"};
 
-    hid.CheckIfIRPatchExists();
     hid.CreateAndMapMemoryBlock();
     hid.CreateRingsOnSharedmemoryBlock();
     hid.InitializePad();
