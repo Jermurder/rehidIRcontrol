@@ -6,6 +6,7 @@ int IR_GetStickY();
 bool IR_IsActive();
 
 extern bool g_receiveActive;
+extern bool usingIR;
 
 void initIR();
 void startReceive();

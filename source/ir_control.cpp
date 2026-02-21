@@ -14,6 +14,7 @@ u8 lastIndex = 0;
 
 u32 *sharedMem;
 bool g_receiveActive = false;
+bool usingIR = false;
 
 enum IRParseState
 {
@@ -248,6 +249,7 @@ void pollReceive()
 
         for (u32 i = 0; i < count; i++)
         {
+            usingIR = true;
             IR_ParseByte(data[i]);
         }
 
