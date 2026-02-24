@@ -5,7 +5,6 @@ extern "C" {
 #include "gpio.h"
 }
 #include "ir_control.hpp"
-#include <stdlib.h>
 
 extern void _putchar(char character);
 /*
@@ -51,16 +50,8 @@ void Pad::ReadFromIO(PadEntry *entry, uint32_t *raw, CirclePadEntry *circlepad, 
 
 #endif
     latest |= IR_GetButtons();
-
-    if (abs(circlepad->x) > 3000 || abs(circlepad->y) > 3000)
-    {
-        usingIR = false;
-    }
-    if (usingIR)
-    {
     circlepad->x = IR_GetStickX();
     circlepad->y = IR_GetStickY();
-    }
     latest = m_circlepad.ConvertToHidButtons(circlepad, latest);
 
     if (irneeded == 1) {
